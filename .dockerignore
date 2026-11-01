@@ -1,0 +1,8 @@
+target
+frontend
+.git
+.env
+*.launch
+.settings
+.classpath
+.project
