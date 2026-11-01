@@ -16,7 +16,7 @@ export default function MyApplications() {
         <>
             <div className="page-header">
                 <h2>My applications</h2>
-                <p className="muted">Track the status of every job you applied to</p>
+                <p className="muted">Track your status and read the AI feedback on your resume</p>
             </div>
 
             {error && <Alert>{error}</Alert>}
@@ -31,8 +31,7 @@ export default function MyApplications() {
                             <thead>
                                 <tr>
                                     <th>Job</th>
-                                    <th>Company</th>
-                                    <th>Skill match</th>
+                                    <th>Match score</th>
                                     <th>Status</th>
                                     <th>Applied on</th>
                                 </tr>
@@ -40,8 +39,23 @@ export default function MyApplications() {
                             <tbody>
                                 {my.map((a) => (
                                     <tr key={a.id}>
-                                        <td>{a.jobTitle}</td>
-                                        <td>{a.company}</td>
+                                        <td>
+                                            {a.jobTitle}
+                                            <div className="job-meta">{a.company}</div>
+                                            {a.aiSummary && (
+                                                <details>
+                                                    <summary>AI feedback</summary>
+                                                    <div className="ai-note">
+                                                        {a.aiSummary}
+                                                        {a.missingSkills && a.missingSkills !== "None" && (
+                                                            <div>
+                                                                <b>Missing skills:</b> {a.missingSkills}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </details>
+                                            )}
+                                        </td>
                                         <td><ScoreBar value={a.matchScore} /></td>
                                         <td><Badge text={a.status} type={statusType(a.status)} /></td>
                                         <td>{formatDate(a.appliedAt)}</td>

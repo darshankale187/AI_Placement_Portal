@@ -15,7 +15,9 @@ import com.tka.repo.JobApplicationRepository;
 import com.tka.repo.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ApplicationService {
@@ -23,6 +25,7 @@ public class ApplicationService {
 	private final JobApplicationRepository repo;
 	private final JobService jobService;
 	private final UserRepository userRepo;
+	private final AiService aiService;
 
 	public JobApplication apply(int jobId, String resumeText, String username) {
 		Job job = jobService.getById(jobId);
@@ -37,11 +40,31 @@ public class ApplicationService {
 			throw new ResponseStatusException(HttpStatus.CONFLICT, "You have already applied to this job");
 		}
 
+		String resume = resumeText.trim();
+		int keyword = keywordScore(job.getRequiredSkills(), resume);
+
+		int finalScore = keyword;
+		String summary = "AI analysis was not available, so the score is based on skill keywords only.";
+		String missing = "";
+
+		try {
+			AiService.Analysis ai = aiService.analyze(job, resume);
+			// AI ko 60% aur keyword ko 40%, taaki resume me chhupe instructions poora score
+			// na badal sakein
+			finalScore = (ai.score() * 6 + keyword * 4) / 10;
+			summary = ai.summary();
+			missing = ai.missing();
+		} catch (Exception e) {
+			log.warn("AI analysis failed, using keyword score: {}", e.getMessage());
+		}
+
 		JobApplication a = new JobApplication();
 		a.setJobId(jobId);
 		a.setStudentUsername(username);
-		a.setResumeText(resumeText.trim());
-		a.setMatchScore(score(job.getRequiredSkills(), resumeText));
+		a.setResumeText(resume);
+		a.setMatchScore(finalScore);
+		a.setAiSummary(summary);
+		a.setMissingSkills(missing);
 		return repo.save(a);
 	}
 
@@ -49,7 +72,8 @@ public class ApplicationService {
 		return repo.findByStudentUsername(username).stream().map(a -> {
 			Job job = jobService.getById(a.getJobId());
 			return Map.<String, Object>of("id", a.getId(), "jobId", a.getJobId(), "jobTitle", job.getTitle(), "company",
-					job.getCompany(), "status", a.getStatus(), "matchScore", a.getMatchScore(), "appliedAt",
+					job.getCompany(), "status", a.getStatus(), "matchScore", a.getMatchScore(), "aiSummary",
+					orEmpty(a.getAiSummary()), "missingSkills", orEmpty(a.getMissingSkills()), "appliedAt",
 					a.getAppliedAt());
 		}).toList();
 	}
@@ -61,7 +85,8 @@ public class ApplicationService {
 				.sorted(Comparator.comparingInt(JobApplication::getMatchScore).reversed())
 				.map(a -> Map.<String, Object>of("id", a.getId(), "studentUsername", a.getStudentUsername(),
 						"studentName", nameOf(a.getStudentUsername()), "resumeText", a.getResumeText(), "status",
-						a.getStatus(), "matchScore", a.getMatchScore(), "appliedAt", a.getAppliedAt()))
+						a.getStatus(), "matchScore", a.getMatchScore(), "aiSummary", orEmpty(a.getAiSummary()),
+						"missingSkills", orEmpty(a.getMissingSkills()), "appliedAt", a.getAppliedAt()))
 				.toList();
 	}
 
@@ -78,12 +103,16 @@ public class ApplicationService {
 		return repo.save(a);
 	}
 
+	private String orEmpty(String s) {
+		return s == null ? "" : s;
+	}
+
 	private String nameOf(String username) {
 		return userRepo.findByUsername(username).map(User::getFullName).orElse(username);
 	}
 
 	// Job ki required skills me se kitni resume me mili, percent me
-	private int score(String requiredSkills, String resume) {
+	private int keywordScore(String requiredSkills, String resume) {
 		String text = resume.toLowerCase();
 		int total = 0;
 		int found = 0;

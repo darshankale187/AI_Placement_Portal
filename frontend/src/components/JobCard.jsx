@@ -19,7 +19,12 @@ export default function JobCard({ job, applied }) {
         setBusy(false);
 
         if (res.meta.requestStatus === "fulfilled") {
-            setMsg({ type: "success", text: `Applied! Skill match: ${res.payload.matchScore}%` });
+            const a = res.payload;
+            setMsg({
+                type: "success",
+                text: `Applied! Match score: ${a.matchScore}%. ${a.aiSummary}${a.missingSkills && a.missingSkills !== "None" ? ` Missing: ${a.missingSkills}` : ""
+                    }`,
+            });
             setOpen(false);
         } else {
             setMsg({ type: "error", text: res.payload?.message || "Could not apply" });
@@ -50,8 +55,8 @@ export default function JobCard({ job, applied }) {
                         <textarea value={resume} onChange={(e) => setResume(e.target.value)} />
                     </div>
                     <div className="actions">
-                        <button className="btn btn-sm" type="submit" disabled={busy}>
-                            {busy ? "Submitting..." : "Submit application"}
+                        <button className="btn btn-ai btn-sm" type="submit" disabled={busy}>
+                            {busy ? "AI is analysing..." : "Submit application"}
                         </button>
                         <button className="btn btn-secondary btn-sm" type="button" onClick={() => setOpen(false)}>
                             Cancel

@@ -25,7 +25,7 @@ export default function Applicants() {
 
             <div className="page-header">
                 <h2>Applicants{job ? `: ${job.title}` : ""}</h2>
-                <p className="muted">Sorted by skill match, highest first</p>
+                <p className="muted">Sorted by match score, highest first</p>
             </div>
 
             {error && <Alert>{error}</Alert>}
@@ -40,7 +40,7 @@ export default function Applicants() {
                             <thead>
                                 <tr>
                                     <th>Student</th>
-                                    <th>Skill match</th>
+                                    <th>Match score</th>
                                     <th>Status</th>
                                     <th>Applied on</th>
                                     <th>Decision</th>
@@ -51,6 +51,19 @@ export default function Applicants() {
                                     <tr key={a.id}>
                                         <td>
                                             {a.studentName}
+                                            {a.aiSummary && (
+                                                <details>
+                                                    <summary>AI analysis</summary>
+                                                    <div className="ai-note">
+                                                        {a.aiSummary}
+                                                        {a.missingSkills && a.missingSkills !== "None" && (
+                                                            <div>
+                                                                <b>Missing skills:</b> {a.missingSkills}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </details>
+                                            )}
                                             <details>
                                                 <summary>Resume</summary>
                                                 <div className="resume">{a.resumeText}</div>

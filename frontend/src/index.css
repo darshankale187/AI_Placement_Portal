@@ -768,3 +768,13 @@ details summary {
   margin-top: 6px;
   max-width: 420px;
 }
+
+.ai-note {
+  margin-top: 6px;
+  padding: 10px 12px;
+  background: var(--ai-soft);
+  border-left: 4px solid var(--ai);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  max-width: 420px;
+}

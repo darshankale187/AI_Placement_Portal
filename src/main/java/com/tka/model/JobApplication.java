@@ -33,5 +33,11 @@ public class JobApplication {
 
 	private int matchScore;
 
+	@Column(length = 1000)
+	private String aiSummary;
+
+	@Column(length = 500)
+	private String missingSkills;
+
 	private LocalDateTime appliedAt = LocalDateTime.now();
 }
