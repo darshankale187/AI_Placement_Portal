@@ -1,0 +1,16 @@
+target/
+*.class
+*.log
+.env
+.env.*
+!.env.example
+*.launch
+.classpath
+.project
+.settings/
+.metadata/
+bin/
+node_modules/
+dist/
+.vscode/
+.idea/
