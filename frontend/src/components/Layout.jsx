@@ -8,7 +8,6 @@ export default function Layout() {
             <main className="container">
                 <Outlet />
             </main>
-            <footer className="footer">Demo project with dummy data only.</footer>
         </>
     );
 }
